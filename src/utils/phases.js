@@ -30,3 +30,31 @@ export function formatDate(timestamp) {
   const d = timestamp.toDate ? timestamp.toDate() : new Date(timestamp)
   return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' })
 }
+
+// km/h → "MM:SS /km"
+export function kmhToMinPkm(kmh) {
+  if (!kmh || kmh <= 0) return ''
+  const total = 60 / kmh
+  const min = Math.floor(total)
+  const sec = Math.round((total - min) * 60)
+  return `${min}:${String(sec).padStart(2, '0')}`
+}
+
+// "MM:SS" → km/h (returns null if invalid)
+export function minPkmToKmh(str) {
+  const parts = str.trim().split(':')
+  if (parts.length !== 2) return null
+  const min = parseInt(parts[0], 10)
+  const sec = parseInt(parts[1], 10)
+  if (isNaN(min) || isNaN(sec) || sec >= 60) return null
+  const minPerKm = min + sec / 60
+  if (minPerKm <= 0) return null
+  return 60 / minPerKm
+}
+
+// Affiche la vitesse selon l'unité choisie
+export function formatSpeed(kmh, unit) {
+  if (!kmh || kmh <= 0) return '—'
+  if (unit === 'minpkm') return `${kmhToMinPkm(kmh)} /km`
+  return `${parseFloat(kmh).toFixed(1)} km/h`
+}
