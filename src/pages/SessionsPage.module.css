@@ -1,7 +1,7 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .title {
@@ -27,13 +27,15 @@
 
 .cardHeader {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
 }
 
 .date {
   font-weight: 600;
+  flex: 1;
+  min-width: 120px;
 }
 
 .totalTime {
@@ -49,6 +51,11 @@
   padding: 0.3rem 0.6rem;
   border-radius: var(--radius);
   transition: color var(--transition), background var(--transition);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
 }
 
 .deleteBtn:hover {
@@ -58,8 +65,8 @@
 
 .phases {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.4rem;
 }
 
 .phaseItem {
@@ -86,7 +93,7 @@
 }
 
 .notes {
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   color: var(--color-text-muted);
   font-style: italic;
 }
@@ -95,4 +102,10 @@
   color: var(--color-text-muted);
   text-align: center;
   padding: 2rem 0;
+}
+
+@media (max-width: 639px) {
+  .phases {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
