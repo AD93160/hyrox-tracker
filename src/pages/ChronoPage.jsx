@@ -100,23 +100,6 @@ export default function ChronoPage() {
           <div className={styles.focusName}>{currentPhase.label}</div>
           <div className={styles.focusTarget}>{currentPhase.target}</div>
           <div className={styles.focusTimer}>{formatTime(currentPhase.time)}</div>
-
-          {currentPhase.weightable && (
-            <div className={styles.weightRow}>
-              <span className={styles.weightLabel}>{currentPhase.weightLabel} :</span>
-              <input
-                type="number"
-                min="0"
-                step="0.5"
-                inputMode="decimal"
-                className={styles.weightInput}
-                value={currentPhase.weight}
-                onChange={e => handleWeight(currentIdx, e.target.value)}
-                placeholder="0"
-              />
-              <span className={styles.weightUnit}>kg</span>
-            </div>
-          )}
         </div>
       )}
 
@@ -147,6 +130,28 @@ export default function ChronoPage() {
             <span>Temps total</span>
             <strong className={styles.saveTotalTime}>{formatTime(globalTime)}</strong>
           </div>
+
+          <div className={styles.weightsSection}>
+            <p className={styles.weightsTitle}>Charges utilisées</p>
+            {phases.filter(p => p.weightable).map((phase) => (
+              <div key={phase.id} className={styles.weightRow}>
+                <span className={styles.weightRowLabel}>{phase.label}</span>
+                <span className={styles.weightRowSub}>{phase.weightLabel}</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  inputMode="decimal"
+                  className={styles.weightInput}
+                  value={phase.weight}
+                  onChange={e => handleWeight(phases.indexOf(phase), e.target.value)}
+                  placeholder="0"
+                />
+                <span className={styles.weightUnit}>kg</span>
+              </div>
+            ))}
+          </div>
+
           <textarea
             className={styles.notes}
             placeholder="Commentaires, conditions, sensations… (optionnel)"
