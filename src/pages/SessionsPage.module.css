@@ -118,6 +118,15 @@
   padding: 2rem 0;
 }
 
+.error {
+  color: var(--color-primary);
+  background: rgba(230,57,70,0.08);
+  border: 1px solid rgba(230,57,70,0.3);
+  border-radius: var(--radius);
+  padding: 0.875rem 1rem;
+  font-size: 0.9rem;
+}
+
 @media (max-width: 639px) {
   .phases {
     grid-template-columns: repeat(2, 1fr);

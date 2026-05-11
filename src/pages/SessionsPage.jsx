@@ -8,12 +8,19 @@ export default function SessionsPage() {
   const { user } = useAuth()
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    getUserSessions(user.uid).then((data) => {
-      setSessions(data)
-      setLoading(false)
-    })
+    getUserSessions(user.uid)
+      .then((data) => {
+        setSessions(data)
+        setLoading(false)
+      })
+      .catch((err) => {
+        console.error('getUserSessions:', err)
+        setError('Impossible de charger les sessions. Vérifiez vos règles Firestore.')
+        setLoading(false)
+      })
   }, [user.uid])
 
   async function handleDelete(id) {
@@ -26,7 +33,8 @@ export default function SessionsPage() {
       <h1 className={styles.title}>Mes sessions</h1>
 
       {loading && <p className={styles.loading}>Chargement…</p>}
-      {!loading && sessions.length === 0 && (
+      {error && <p className={styles.error}>{error}</p>}
+      {!loading && !error && sessions.length === 0 && (
         <p className={styles.empty}>Aucune session enregistrée.</p>
       )}
 
