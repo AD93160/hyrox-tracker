@@ -11,51 +11,34 @@ export default function ChronoPage() {
   const [phases, setPhases] = useState(initPhases)
   const [currentIdx, setCurrentIdx] = useState(0)
   const [globalTime, setGlobalTime] = useState(0)
-  const [globalRunning, setGlobalRunning] = useState(false)
-  const [phaseRunning, setPhaseRunning] = useState(false)
+  const [running, setRunning] = useState(false)
   const [finished, setFinished] = useState(false)
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState('')
 
-  const phaseRunningRef = useRef(false)
   const currentIdxRef = useRef(0)
 
   useEffect(() => {
-    if (!globalRunning) return
+    if (!running) return
     const id = setInterval(() => {
       setGlobalTime(t => t + 1)
-      if (phaseRunningRef.current) {
-        const idx = currentIdxRef.current
-        setPhases(prev =>
-          prev.map((p, i) => i === idx ? { ...p, time: p.time + 1 } : p)
-        )
-      }
+      setPhases(prev =>
+        prev.map((p, i) => i === currentIdxRef.current ? { ...p, time: p.time + 1 } : p)
+      )
     }, 1000)
     return () => clearInterval(id)
-  }, [globalRunning])
+  }, [running])
 
-  const sessionStarted = globalRunning || globalTime > 0
-  const currentPhase = phases[currentIdx]
   const isLastPhase = currentIdx === PHASES.length - 1
+  const currentPhase = phases[currentIdx]
 
   function handleStart() {
-    phaseRunningRef.current = true
-    setPhaseRunning(true)
-    setGlobalRunning(true)
-  }
-
-  function handleTogglePhase() {
-    setPhaseRunning(r => {
-      phaseRunningRef.current = !r
-      return !r
-    })
+    setRunning(true)
   }
 
   function handleNext() {
-    phaseRunningRef.current = false
-    setPhaseRunning(false)
     setCurrentIdx(i => {
       const next = i + 1
       currentIdxRef.current = next
@@ -64,16 +47,12 @@ export default function ChronoPage() {
   }
 
   function handleFinish() {
-    setGlobalRunning(false)
-    phaseRunningRef.current = false
-    setPhaseRunning(false)
+    setRunning(false)
     setFinished(true)
   }
 
   function handleReset() {
-    setGlobalRunning(false)
-    phaseRunningRef.current = false
-    setPhaseRunning(false)
+    setRunning(false)
     setFinished(false)
     setCurrentIdx(0)
     currentIdxRef.current = 0
@@ -105,13 +84,13 @@ export default function ChronoPage() {
     <div className={styles.page}>
       <div className={styles.header}>
         <h1 className={styles.title}>Chronomètre</h1>
-        <span className={`${styles.totalTime} ${globalRunning ? styles.totalTimeRunning : ''}`}>
+        <span className={`${styles.totalTime} ${running ? styles.totalTimeRunning : ''}`}>
           {formatTime(globalTime)}
         </span>
       </div>
 
       {!finished && (
-        <div className={`${styles.focusCard} ${phaseRunning ? styles.focusRunning : ''}`}>
+        <div className={`${styles.focusCard} ${running ? styles.focusRunning : ''}`}>
           <div className={styles.focusMeta}>
             <span className={`${styles.badge} ${styles[currentPhase.type]}`}>
               {currentPhase.type === 'run' ? 'Run' : 'Station'}
@@ -143,31 +122,19 @@ export default function ChronoPage() {
 
       {!finished && (
         <div className={styles.controls}>
-          {!sessionStarted ? (
+          {!running ? (
             <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={handleStart}>
               Démarrer
             </button>
-          ) : (
-            <button
-              className={`${styles.btn} ${phaseRunning ? styles.btnSecondary : styles.btnPrimary}`}
-              onClick={handleTogglePhase}
-            >
-              {phaseRunning ? 'Pause phase' : currentPhase.time === 0 ? 'Démarrer la phase' : 'Reprendre'}
-            </button>
-          )}
-
-          {sessionStarted && !isLastPhase && (
+          ) : !isLastPhase ? (
             <button className={`${styles.btn} ${styles.btnNext}`} onClick={handleNext}>
               Phase suivante →
             </button>
-          )}
-
-          {sessionStarted && isLastPhase && (
+          ) : (
             <button className={`${styles.btn} ${styles.btnNext}`} onClick={handleFinish}>
               Terminer ✓
             </button>
           )}
-
           <button className={`${styles.btn} ${styles.btnDanger}`} onClick={handleReset}>
             Réinitialiser
           </button>
