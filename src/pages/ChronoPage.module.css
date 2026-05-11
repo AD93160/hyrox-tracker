@@ -1,7 +1,7 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .header {
@@ -18,43 +18,48 @@
 }
 
 .totalTime {
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   color: var(--color-primary);
 }
 
-.phaseCard {
+.focusCard {
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 0.875rem 1rem;
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  transition: border-color var(--transition);
+}
+
+.focusRunning {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary), 0 0 24px rgba(230,57,70,0.12);
+}
+
+.focusMeta {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: space-between;
+  width: 100%;
 }
 
-.phaseCard + .phaseCard {
-  margin-top: 0.5rem;
+.focusStep {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
 }
 
-.phaseCard.active {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 1px var(--color-primary);
-}
-
-.phaseCard.done {
-  opacity: 0.55;
-}
-
-.phaseBadge {
+.badge {
   font-size: 0.65rem;
   font-weight: 700;
-  padding: 0.2rem 0.45rem;
+  padding: 0.2rem 0.5rem;
   border-radius: 4px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  flex-shrink: 0;
 }
 
 .run {
@@ -67,41 +72,88 @@
   color: var(--color-station);
 }
 
-.phaseLabel {
-  flex: 1;
-  font-weight: 500;
-  font-size: 0.95rem;
+.focusName {
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-align: center;
 }
 
-.phaseTarget {
-  font-size: 0.78rem;
+.focusTarget {
+  font-size: 0.9rem;
   color: var(--color-text-muted);
 }
 
-.phaseTime {
+.focusTimer {
+  font-size: 3.5rem;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -1px;
+  color: var(--color-text);
+  margin: 0.25rem 0;
+}
+
+.weightRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--color-surface-2);
+  border-radius: 8px;
+  padding: 0.5rem 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.weightLabel {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.weightInput {
+  width: 72px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  color: var(--color-text);
+  font-size: 1rem;
   font-weight: 600;
-  min-width: 5ch;
-  text-align: right;
-  font-size: 0.95rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.weightInput:focus {
+  outline: none;
+  border-color: var(--color-station);
+}
+
+.weightUnit {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
 }
 
 .controls {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.625rem;
   flex-wrap: wrap;
 }
 
 .btn {
-  padding: 0 1.25rem;
   height: 48px;
+  padding: 0 1.25rem;
   border-radius: var(--radius);
   font-weight: 600;
   font-size: 0.95rem;
   transition: background var(--transition), opacity var(--transition);
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .btnPrimary {
@@ -109,7 +161,7 @@
   color: #fff;
 }
 
-.btnPrimary:hover {
+.btnPrimary:not(:disabled):hover {
   background: var(--color-primary-dark);
 }
 
@@ -123,19 +175,57 @@
   border-color: var(--color-text-muted);
 }
 
+.btnNext {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  border: 1px solid var(--color-primary);
+  flex: 1;
+}
+
+.btnNext:hover {
+  background: rgba(230,57,70,0.1);
+}
+
 .btnDanger {
   background: transparent;
-  color: var(--color-primary);
-  border: 1px solid var(--color-primary);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  font-size: 0.85rem;
 }
 
 .btnDanger:hover {
-  background: rgba(230,57,70,0.1);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.saveSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.saveSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.saveTotalTime {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .notes {
   width: 100%;
-  background: var(--color-surface);
+  background: var(--color-surface-2);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 0.875rem 1rem;
@@ -151,14 +241,97 @@
   border-color: var(--color-primary);
 }
 
-.saved {
-  color: #3fb950;
+.saveError {
+  color: var(--color-primary);
   font-size: 0.875rem;
 }
 
+.savedMsg {
+  color: #3fb950;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.phaseList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.phaseListTitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.phaseRow {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  opacity: 0.45;
+}
+
+.phaseRowActive {
+  opacity: 1;
+  border-color: var(--color-primary);
+}
+
+.phaseRowDone {
+  opacity: 0.75;
+}
+
+.phaseBadge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.phaseRowLabel {
+  flex: 1;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.phaseRowTarget {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.phaseRowWeight {
+  font-size: 0.75rem;
+  background: rgba(245,158,11,0.12);
+  color: var(--color-station);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.phaseRowTime {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 0.9rem;
+  min-width: 5ch;
+  text-align: right;
+}
+
 @media (max-width: 639px) {
-  .totalTime {
-    font-size: 2rem;
+  .focusName {
+    font-size: 1.3rem;
+  }
+
+  .focusTimer {
+    font-size: 3rem;
   }
 
   .controls {
@@ -167,6 +340,5 @@
 
   .btn {
     width: 100%;
-    justify-content: center;
   }
 }

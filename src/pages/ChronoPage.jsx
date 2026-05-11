@@ -4,21 +4,23 @@ import { saveSession } from '../firebase/sessions'
 import { PHASES, formatTime } from '../utils/phases'
 import styles from './ChronoPage.module.css'
 
-const initialPhases = () => PHASES.map((p) => ({ ...p, time: 0 }))
+const initPhases = () => PHASES.map(p => ({ ...p, time: 0, weight: '' }))
 
 export default function ChronoPage() {
   const { user } = useAuth()
-  const [phases, setPhases] = useState(initialPhases)
+  const [phases, setPhases] = useState(initPhases)
   const [currentIdx, setCurrentIdx] = useState(0)
   const [running, setRunning] = useState(false)
   const [finished, setFinished] = useState(false)
   const [notes, setNotes] = useState('')
+  const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const intervalRef = useRef(null)
 
   const tick = useCallback(() => {
-    setPhases((prev) =>
-      prev.map((p, i) => (i === currentIdx ? { ...p, time: p.time + 1 } : p))
+    setPhases(prev =>
+      prev.map((p, i) => i === currentIdx ? { ...p, time: p.time + 1 } : p)
     )
   }, [currentIdx])
 
@@ -31,35 +33,52 @@ export default function ChronoPage() {
     return () => clearInterval(intervalRef.current)
   }, [running, tick])
 
-  function handleStartStop() {
-    if (finished) return
-    setRunning((r) => !r)
+  const sessionStarted = phases.some(p => p.time > 0) || running
+  const currentPhase = phases[currentIdx]
+  const isLastPhase = currentIdx === PHASES.length - 1
+  const totalTime = phases.reduce((s, p) => s + p.time, 0)
+
+  function handleToggle() {
+    setRunning(r => !r)
   }
 
   function handleNext() {
-    if (currentIdx >= PHASES.length - 1) {
-      setRunning(false)
-      setFinished(true)
-      return
-    }
-    setCurrentIdx((i) => i + 1)
+    setRunning(false)
+    setCurrentIdx(i => i + 1)
+  }
+
+  function handleFinish() {
+    setRunning(false)
+    setFinished(true)
   }
 
   function handleReset() {
+    clearInterval(intervalRef.current)
     setRunning(false)
     setFinished(false)
     setCurrentIdx(0)
-    setPhases(initialPhases())
+    setPhases(initPhases())
     setNotes('')
     setSaved(false)
+    setSaveError('')
+  }
+
+  function handleWeight(idx, value) {
+    setPhases(prev => prev.map((p, i) => i === idx ? { ...p, weight: value } : p))
   }
 
   async function handleSave() {
-    await saveSession(user.uid, phases, notes)
-    setSaved(true)
+    setSaving(true)
+    setSaveError('')
+    try {
+      await saveSession(user.uid, phases, notes)
+      setSaved(true)
+    } catch {
+      setSaveError('Sauvegarde échouée. Vérifiez votre connexion et réessayez.')
+    } finally {
+      setSaving(false)
+    }
   }
-
-  const totalTime = phases.reduce((s, p) => s + p.time, 0)
 
   return (
     <div className={styles.page}>
@@ -68,75 +87,121 @@ export default function ChronoPage() {
         <span className={styles.totalTime}>{formatTime(totalTime)}</span>
       </div>
 
-      <div className={styles.controls}>
-        {!finished && (
-          <button
-            className={`${styles.btn} ${styles.btnPrimary}`}
-            onClick={handleStartStop}
-          >
-            {running ? 'Pause' : 'Démarrer'}
-          </button>
-        )}
-        {running && currentIdx < PHASES.length - 1 && (
-          <button
-            className={`${styles.btn} ${styles.btnSecondary}`}
-            onClick={handleNext}
-          >
-            Phase suivante →
-          </button>
-        )}
-        {running && currentIdx === PHASES.length - 1 && (
-          <button
-            className={`${styles.btn} ${styles.btnSecondary}`}
-            onClick={handleNext}
-          >
-            Terminer
-          </button>
-        )}
-        <button
-          className={`${styles.btn} ${styles.btnDanger}`}
-          onClick={handleReset}
-        >
-          Réinitialiser
-        </button>
-      </div>
+      {!finished && (
+        <div className={`${styles.focusCard} ${running ? styles.focusRunning : ''}`}>
+          <div className={styles.focusMeta}>
+            <span className={`${styles.badge} ${styles[currentPhase.type]}`}>
+              {currentPhase.type === 'run' ? 'Run' : 'Station'}
+            </span>
+            <span className={styles.focusStep}>{currentIdx + 1} / {PHASES.length}</span>
+          </div>
+          <div className={styles.focusName}>{currentPhase.label}</div>
+          <div className={styles.focusTarget}>{currentPhase.target}</div>
+          <div className={styles.focusTimer}>{formatTime(currentPhase.time)}</div>
 
-      <div>
+          {currentPhase.weightable && (
+            <div className={styles.weightRow}>
+              <span className={styles.weightLabel}>{currentPhase.weightLabel} :</span>
+              <input
+                type="number"
+                min="0"
+                step="0.5"
+                inputMode="decimal"
+                className={styles.weightInput}
+                value={currentPhase.weight}
+                onChange={e => handleWeight(currentIdx, e.target.value)}
+                placeholder="0"
+              />
+              <span className={styles.weightUnit}>kg</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {!finished && (
+        <div className={styles.controls}>
+          <button
+            className={`${styles.btn} ${running ? styles.btnSecondary : styles.btnPrimary}`}
+            onClick={handleToggle}
+          >
+            {running ? 'Pause' : currentPhase.time === 0 ? 'Démarrer' : 'Reprendre'}
+          </button>
+
+          {sessionStarted && !isLastPhase && (
+            <button className={`${styles.btn} ${styles.btnNext}`} onClick={handleNext}>
+              Phase suivante →
+            </button>
+          )}
+
+          {sessionStarted && isLastPhase && (
+            <button className={`${styles.btn} ${styles.btnNext}`} onClick={handleFinish}>
+              Terminer ✓
+            </button>
+          )}
+
+          <button className={`${styles.btn} ${styles.btnDanger}`} onClick={handleReset}>
+            Réinitialiser
+          </button>
+        </div>
+      )}
+
+      {finished && (
+        <div className={styles.saveSection}>
+          <div className={styles.saveSummary}>
+            <span>Temps total</span>
+            <strong className={styles.saveTotalTime}>{formatTime(totalTime)}</strong>
+          </div>
+          <textarea
+            className={styles.notes}
+            placeholder="Commentaires, conditions, sensations… (optionnel)"
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+          />
+          {!saved ? (
+            <>
+              <button
+                className={`${styles.btn} ${styles.btnPrimary}`}
+                onClick={handleSave}
+                disabled={saving}
+              >
+                {saving ? 'Sauvegarde en cours…' : 'Sauvegarder la session'}
+              </button>
+              {saveError && <p className={styles.saveError}>{saveError}</p>}
+            </>
+          ) : (
+            <p className={styles.savedMsg}>Session sauvegardée ✓</p>
+          )}
+          <button className={`${styles.btn} ${styles.btnDanger}`} onClick={handleReset}>
+            Nouvelle session
+          </button>
+        </div>
+      )}
+
+      <div className={styles.phaseList}>
+        <p className={styles.phaseListTitle}>Toutes les phases</p>
         {phases.map((phase, i) => (
           <div
             key={phase.id}
-            className={`${styles.phaseCard} ${i === currentIdx && !finished ? styles.active : ''} ${i < currentIdx ? styles.done : ''}`}
+            className={[
+              styles.phaseRow,
+              i === currentIdx && !finished ? styles.phaseRowActive : '',
+              (i < currentIdx || finished) ? styles.phaseRowDone : '',
+            ].filter(Boolean).join(' ')}
           >
             <span className={`${styles.phaseBadge} ${styles[phase.type]}`}>
-              {phase.type === 'run' ? 'Run' : 'Station'}
+              {phase.type === 'run' ? 'Run' : 'Stat.'}
             </span>
-            <span className={styles.phaseLabel}>{phase.label}</span>
-            <span className={styles.phaseTarget}>{phase.target}</span>
-            <span className={styles.phaseTime}>{formatTime(phase.time)}</span>
+            <span className={styles.phaseRowLabel}>{phase.label}</span>
+            <span className={styles.phaseRowTarget}>{phase.target}</span>
+            {phase.weightable && phase.weight && (
+              <span className={styles.phaseRowWeight}>{phase.weight} kg</span>
+            )}
+            <span className={styles.phaseRowTime}>
+              {phase.time > 0 ? formatTime(phase.time) : '—'}
+            </span>
           </div>
         ))}
       </div>
-
-      {finished && (
-        <>
-          <textarea
-            className={styles.notes}
-            placeholder="Notes sur la session (optionnel)..."
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
-          {!saved ? (
-            <button
-              className={`${styles.btn} ${styles.btnPrimary}`}
-              onClick={handleSave}
-            >
-              Sauvegarder la session
-            </button>
-          ) : (
-            <p className={styles.saved}>Session sauvegardée ✓</p>
-          )}
-        </>
-      )}
     </div>
   )
 }

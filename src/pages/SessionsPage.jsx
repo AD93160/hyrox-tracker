@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { getUserSessions, deleteSession } from '../firebase/sessions'
-import { formatTime } from '../utils/phases'
+import { formatTime, formatDate } from '../utils/phases'
 import styles from './SessionsPage.module.css'
 
 export default function SessionsPage() {
@@ -21,22 +21,11 @@ export default function SessionsPage() {
     setSessions((prev) => prev.filter((s) => s.id !== id))
   }
 
-  function formatDate(timestamp) {
-    if (!timestamp) return '—'
-    const d = timestamp.toDate ? timestamp.toDate() : new Date(timestamp)
-    return d.toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-    })
-  }
-
   return (
     <div className={styles.page}>
       <h1 className={styles.title}>Mes sessions</h1>
 
       {loading && <p className={styles.loading}>Chargement…</p>}
-
       {!loading && sessions.length === 0 && (
         <p className={styles.empty}>Aucune session enregistrée.</p>
       )}
@@ -46,10 +35,7 @@ export default function SessionsPage() {
           <div className={styles.cardHeader}>
             <span className={styles.date}>{formatDate(session.date)}</span>
             <span className={styles.totalTime}>{formatTime(session.totalTime)}</span>
-            <button
-              className={styles.deleteBtn}
-              onClick={() => handleDelete(session.id)}
-            >
+            <button className={styles.deleteBtn} onClick={() => handleDelete(session.id)}>
               Supprimer
             </button>
           </div>
@@ -58,6 +44,9 @@ export default function SessionsPage() {
             {session.phases?.map((phase) => (
               <div key={phase.id} className={styles.phaseItem}>
                 <span className={styles.phaseItemLabel}>{phase.label}</span>
+                {phase.weight && (
+                  <span className={styles.phaseItemWeight}>{phase.weight} kg</span>
+                )}
                 <span className={styles.phaseItemTime}>{formatTime(phase.time)}</span>
               </div>
             ))}

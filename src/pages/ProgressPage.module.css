@@ -26,11 +26,11 @@
 }
 
 .sectionTitle {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
 }
 
 .chartWrapper {
@@ -64,6 +64,113 @@
   margin-top: 0.25rem;
 }
 
+.compareSelectors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.selectorGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.selectorLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.selector {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.75rem;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.selector:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.compareTable {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.83rem;
+}
+
+.compareRow {
+  display: grid;
+  grid-template-columns: 1fr 72px 72px 80px;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.45rem 0.5rem;
+  border-radius: 6px;
+}
+
+.compareRow:nth-child(even) {
+  background: var(--color-surface-2);
+}
+
+.compareHeader {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  background: transparent !important;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.compareTotalRow {
+  font-weight: 700;
+  background: transparent !important;
+  border-top: 1px solid var(--color-border);
+  padding-top: 0.5rem;
+  margin-top: 2px;
+}
+
+.comparePhase {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compareTime {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--color-text-muted);
+}
+
+.compareDiff {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.improved {
+  color: #3fb950;
+}
+
+.slower {
+  color: var(--color-primary);
+}
+
+.compareHint {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
 .loading {
   color: var(--color-text-muted);
   text-align: center;
@@ -76,6 +183,15 @@
   }
 
   .statValue {
-    font-size: 1.15rem;
+    font-size: 1.1rem;
+  }
+
+  .compareSelectors {
+    grid-template-columns: 1fr;
+  }
+
+  .compareRow {
+    grid-template-columns: 1fr 60px 60px 68px;
+    font-size: 0.78rem;
   }
 }
