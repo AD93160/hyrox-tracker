@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { saveSession } from '../firebase/sessions'
 import { PHASES, formatTime } from '../utils/phases'
@@ -10,53 +10,74 @@ export default function ChronoPage() {
   const { user } = useAuth()
   const [phases, setPhases] = useState(initPhases)
   const [currentIdx, setCurrentIdx] = useState(0)
-  const [running, setRunning] = useState(false)
+  const [globalTime, setGlobalTime] = useState(0)
+  const [globalRunning, setGlobalRunning] = useState(false)
+  const [phaseRunning, setPhaseRunning] = useState(false)
   const [finished, setFinished] = useState(false)
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState('')
-  const intervalRef = useRef(null)
 
-  const tick = useCallback(() => {
-    setPhases(prev =>
-      prev.map((p, i) => i === currentIdx ? { ...p, time: p.time + 1 } : p)
-    )
-  }, [currentIdx])
+  const phaseRunningRef = useRef(false)
+  const currentIdxRef = useRef(0)
 
   useEffect(() => {
-    if (running) {
-      intervalRef.current = setInterval(tick, 1000)
-    } else {
-      clearInterval(intervalRef.current)
-    }
-    return () => clearInterval(intervalRef.current)
-  }, [running, tick])
+    if (!globalRunning) return
+    const id = setInterval(() => {
+      setGlobalTime(t => t + 1)
+      if (phaseRunningRef.current) {
+        const idx = currentIdxRef.current
+        setPhases(prev =>
+          prev.map((p, i) => i === idx ? { ...p, time: p.time + 1 } : p)
+        )
+      }
+    }, 1000)
+    return () => clearInterval(id)
+  }, [globalRunning])
 
-  const sessionStarted = phases.some(p => p.time > 0) || running
+  const sessionStarted = globalRunning || globalTime > 0
   const currentPhase = phases[currentIdx]
   const isLastPhase = currentIdx === PHASES.length - 1
-  const totalTime = phases.reduce((s, p) => s + p.time, 0)
 
-  function handleToggle() {
-    setRunning(r => !r)
+  function handleStart() {
+    phaseRunningRef.current = true
+    setPhaseRunning(true)
+    setGlobalRunning(true)
+  }
+
+  function handleTogglePhase() {
+    setPhaseRunning(r => {
+      phaseRunningRef.current = !r
+      return !r
+    })
   }
 
   function handleNext() {
-    setRunning(false)
-    setCurrentIdx(i => i + 1)
+    phaseRunningRef.current = false
+    setPhaseRunning(false)
+    setCurrentIdx(i => {
+      const next = i + 1
+      currentIdxRef.current = next
+      return next
+    })
   }
 
   function handleFinish() {
-    setRunning(false)
+    setGlobalRunning(false)
+    phaseRunningRef.current = false
+    setPhaseRunning(false)
     setFinished(true)
   }
 
   function handleReset() {
-    clearInterval(intervalRef.current)
-    setRunning(false)
+    setGlobalRunning(false)
+    phaseRunningRef.current = false
+    setPhaseRunning(false)
     setFinished(false)
     setCurrentIdx(0)
+    currentIdxRef.current = 0
+    setGlobalTime(0)
     setPhases(initPhases())
     setNotes('')
     setSaved(false)
@@ -71,7 +92,7 @@ export default function ChronoPage() {
     setSaving(true)
     setSaveError('')
     try {
-      await saveSession(user.uid, phases, notes)
+      await saveSession(user.uid, phases, notes, globalTime)
       setSaved(true)
     } catch {
       setSaveError('Sauvegarde échouée. Vérifiez votre connexion et réessayez.')
@@ -84,11 +105,13 @@ export default function ChronoPage() {
     <div className={styles.page}>
       <div className={styles.header}>
         <h1 className={styles.title}>Chronomètre</h1>
-        <span className={styles.totalTime}>{formatTime(totalTime)}</span>
+        <span className={`${styles.totalTime} ${globalRunning ? styles.totalTimeRunning : ''}`}>
+          {formatTime(globalTime)}
+        </span>
       </div>
 
       {!finished && (
-        <div className={`${styles.focusCard} ${running ? styles.focusRunning : ''}`}>
+        <div className={`${styles.focusCard} ${phaseRunning ? styles.focusRunning : ''}`}>
           <div className={styles.focusMeta}>
             <span className={`${styles.badge} ${styles[currentPhase.type]}`}>
               {currentPhase.type === 'run' ? 'Run' : 'Station'}
@@ -120,12 +143,18 @@ export default function ChronoPage() {
 
       {!finished && (
         <div className={styles.controls}>
-          <button
-            className={`${styles.btn} ${running ? styles.btnSecondary : styles.btnPrimary}`}
-            onClick={handleToggle}
-          >
-            {running ? 'Pause' : currentPhase.time === 0 ? 'Démarrer' : 'Reprendre'}
-          </button>
+          {!sessionStarted ? (
+            <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={handleStart}>
+              Démarrer
+            </button>
+          ) : (
+            <button
+              className={`${styles.btn} ${phaseRunning ? styles.btnSecondary : styles.btnPrimary}`}
+              onClick={handleTogglePhase}
+            >
+              {phaseRunning ? 'Pause phase' : currentPhase.time === 0 ? 'Démarrer la phase' : 'Reprendre'}
+            </button>
+          )}
 
           {sessionStarted && !isLastPhase && (
             <button className={`${styles.btn} ${styles.btnNext}`} onClick={handleNext}>
@@ -149,7 +178,7 @@ export default function ChronoPage() {
         <div className={styles.saveSection}>
           <div className={styles.saveSummary}>
             <span>Temps total</span>
-            <strong className={styles.saveTotalTime}>{formatTime(totalTime)}</strong>
+            <strong className={styles.saveTotalTime}>{formatTime(globalTime)}</strong>
           </div>
           <textarea
             className={styles.notes}
