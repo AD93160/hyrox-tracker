@@ -287,6 +287,24 @@ export default function ChronoPage() {
             </div>
           )}
 
+          {/* Transitions post-session */}
+          {phases.some(p => p.transitionTime > 0) && (
+            <div className={styles.postSection}>
+              <p className={styles.postTitle}>
+                Transitions
+                <span className={styles.postUnit}>
+                  total {formatTime(phases.reduce((s, p) => s + (p.transitionTime || 0), 0))}
+                </span>
+              </p>
+              {phases.filter(p => p.transitionTime > 0).map(phase => (
+                <div key={phase.id} className={styles.transitionPostRow}>
+                  <span className={styles.transitionPostLabel}>↕ {phase.label}</span>
+                  <span className={styles.transitionPostTime}>{formatTime(phase.transitionTime)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           <textarea
             className={styles.notes}
             placeholder="Commentaires, conditions, sensations… (optionnel)"
