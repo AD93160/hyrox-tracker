@@ -1,6 +1,21 @@
+import { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useProfile } from '../hooks/useProfile'
+import { AVATARS } from '../firebase/profile'
 import styles from './Layout.module.css'
+
+function AvatarBubble({ avatarId, size = 28 }) {
+  const av = AVATARS.find(a => a.id === avatarId) ?? AVATARS[0]
+  return (
+    <span
+      className={styles.avatarBubble}
+      style={{ background: av.bg, width: size, height: size, fontSize: size * 0.52 }}
+    >
+      {av.emoji}
+    </span>
+  )
+}
 
 function ChronoIcon() {
   return (
@@ -44,6 +59,19 @@ function GearIcon() {
 
 export default function Layout({ children }) {
   const { user, logout } = useAuth()
+  const { profile } = useProfile()
+  const [showGreeting, setShowGreeting] = useState(false)
+
+  const pseudo = profile?.pseudo?.trim() ?? ''
+
+  useEffect(() => {
+    if (!pseudo) return
+    if (sessionStorage.getItem('hyrox_greeted')) return
+    setShowGreeting(true)
+    sessionStorage.setItem('hyrox_greeted', '1')
+    const t = setTimeout(() => setShowGreeting(false), 3500)
+    return () => clearTimeout(t)
+  }, [pseudo])
 
   const navLinkClass = ({ isActive }) =>
     isActive ? `${styles.link} ${styles.linkActive}` : styles.link
@@ -53,6 +81,13 @@ export default function Layout({ children }) {
 
   return (
     <div className={styles.wrapper}>
+      {showGreeting && (
+        <div className={styles.greetingToast}>
+          <AvatarBubble avatarId={profile?.avatarId} size={26} />
+          Bonjour,&nbsp;<strong>{pseudo}</strong>&nbsp;!
+        </div>
+      )}
+
       <nav className={styles.nav}>
         <span className={styles.brand}>Hyrox Tracker</span>
         <span className={styles.navLinks}>
@@ -62,7 +97,15 @@ export default function Layout({ children }) {
           <NavLink to="/settings" className={navLinkClass}>Réglages</NavLink>
         </span>
         {user && (
-          <button className={styles.logoutBtn} onClick={logout}>Déconnexion</button>
+          <div className={styles.userArea}>
+            {pseudo && (
+              <span className={styles.pseudoChip}>
+                <AvatarBubble avatarId={profile?.avatarId} size={22} />
+                <span className={styles.pseudoText}>{pseudo}</span>
+              </span>
+            )}
+            <button className={styles.logoutBtn} onClick={logout}>Déconnexion</button>
+          </div>
         )}
       </nav>
 
