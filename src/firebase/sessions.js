@@ -3,6 +3,7 @@ import {
   addDoc,
   getDocs,
   deleteDoc,
+  updateDoc,
   doc,
   query,
   where,
@@ -21,6 +22,11 @@ export async function saveSession(userId, phases, notes = '', totalTime = null) 
     totalTime: total,
     date: serverTimestamp(),
   })
+}
+
+export async function updateSession(sessionId, phases) {
+  const totalTime = phases.reduce((s, p) => s + (p.time || 0) + (p.transitionTime || 0), 0)
+  return updateDoc(doc(db, COLLECTION, sessionId), { phases, totalTime })
 }
 
 export async function getUserSessions(userId) {
